@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "turni-accesso",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./public"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "accesso-turni-1-0",
+      "database_id": "2f3f8ae9-dba1-4c33-af5c-54689bbe94b3"
+    }
+  ]
+}
