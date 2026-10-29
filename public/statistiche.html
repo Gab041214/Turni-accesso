@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<title>Statistiche accessi</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{--bg:#D8D8DE;--fg:#0f172a;--mut:#5b6475;--card:#fff;--bd:#dfe1e6;--btn:#003335;--bar:#003335;--track:#e9eaee;--err:#b91c1c}
+@media (prefers-color-scheme: dark){:root{--bg:#020618;--fg:#f1f5f9;--mut:#94a3b8;--card:#0f172a;--bd:#1e293b;--bar:#5eead4;--track:#1e293b;--err:#f87171}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,system-ui,"Segoe UI",sans-serif;padding:max(20px,env(safe-area-inset-top)) 16px 28px}
+.w{max-width:480px;margin:0 auto}
+h1{font-size:28px;line-height:34px;margin:4px 0 2px;letter-spacing:-0.02em}
+.sub{color:var(--mut);font-size:14px;margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:16px}
+.tot{text-align:center;padding:20px}
+.tot b{display:block;font-size:64px;line-height:68px;letter-spacing:-0.03em}
+.tot span{color:var(--mut);font-size:15px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.tile{text-align:center;padding:12px 4px}
+.tile b{display:block;font-size:26px;line-height:30px}
+.tile span{color:var(--mut);font-size:12px}
+h2{font-size:15px;margin:0 0 10px}
+.row{display:grid;grid-template-columns:52px 1fr 28px;gap:8px;align-items:center;font-size:13px;margin:6px 0}
+.row i{display:block;height:10px;border-radius:5px;background:var(--track);overflow:hidden}
+.row u{display:block;height:100%;background:var(--bar);border-radius:5px}
+.row em{font-style:normal;text-align:right;font-weight:600}
+.btns{display:flex;gap:8px;margin-top:12px}
+button{font:inherit;height:50px;border-radius:14px;border:1px solid var(--bd);background:var(--card);color:var(--fg);font-size:16px;font-weight:600;flex:1}
+button.p{background:var(--btn);border-color:var(--btn);color:#fff}
+input{font:inherit;width:100%;height:50px;border-radius:14px;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:0 14px;font-size:17px;margin:12px 0}
+.hide{display:none!important}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.dlg{background:var(--card);border-radius:24px;padding:20px;max-width:380px;width:100%;max-height:90vh;overflow:auto}
+.dlg ol{padding-left:20px;margin:8px 0;font-size:14px;line-height:1.45}
+.code{display:flex;gap:8px;align-items:center;background:var(--track);border-radius:12px;padding:10px 12px;font-family:ui-monospace,Menlo,monospace;font-size:14px;margin:6px 0 10px}
+.code span{flex:1;overflow-wrap:anywhere}.code button{height:34px;flex:none;padding:0 12px;font-size:13px;border-radius:10px}
+.note{color:var(--mut);font-size:13px;margin:8px 0 0}
+.err{color:var(--err);font-size:14px;min-height:20px;margin:0}
+</style></head><body>
+<div class="w">
+<section id="login">
+ <div style="text-align:center;margin-top:60px"><img src="/icon-512.png" width="80" height="80" alt="" style="border-radius:18px"><h1>Statistiche accessi</h1><p class="sub">Inserisci la password per vedere i numeri.</p></div>
+ <form id="form"><input id="pw" type="password" placeholder="Password" autocomplete="current-password" required><p class="err" id="err" role="alert"></p><button class="p" style="width:100%" type="submit">Entra</button></form>
+</section>
+<section id="stat" class="hide">
+ <h1>Statistiche accessi</h1><p class="sub" id="agg"></p>
+ <div class="card tot"><b id="tot">–</b><span>dispositivi in totale</span></div>
+ <div class="tiles"><div class="card tile"><b id="oggi">–</b><span>Oggi</span></div><div class="card tile"><b id="sette">–</b><span>Ultimi 7 giorni</span></div><div class="card tile"><b id="trenta">–</b><span>Ultimi 30 giorni</span></div></div>
+ <div class="card"><h2>Nuovi dispositivi per giorno</h2><div id="rows"></div></div>
+ <div class="btns"><button class="p" id="agg-b" type="button">Aggiorna</button><button id="azz" type="button">Azzera conteggio</button></div>
+ <p class="note">Il conteggio è una stima: chi apre il link da app diverse può essere contato due volte.</p>
+ <p class="note"><a href="#" id="esci" style="color:var(--mut)">Esci e dimentica la password</a></p>
+</section>
+<div id="dlg" class="ov hide" role="dialog" aria-modal="true"><div class="dlg">
+ <h2 style="font-size:19px">Come azzerare il conteggio</h2>
+ <p class="note" style="margin:0 0 8px">Da questa pagina non si cancella nulla: va fatto a mano su Cloudflare.</p>
+ <ol><li>Apri la dashboard di Cloudflare.</li><li>Vai in <b>Archiviazione e database</b>, poi <b>D1 SQL database</b>.</li><li>Apri <b>accesso-turni-1-0</b> e la scheda <b>Console</b>.</li><li>Incolla questo comando e tocca <b>Execute</b>:</li></ol>
+ <div class="code"><span id="cmd">DELETE FROM dispositivi;</span><button id="cp" type="button">Copia</button></div>
+ <p class="note">Attenzione: cancella tutte le righe e non si può annullare. Per controllare prima il totale: <b>SELECT COUNT(*) FROM dispositivi;</b></p>
+ <button class="p" id="chiudi" style="width:100%;margin-top:14px" type="button">Chiudi</button>
+</div></div>
+</div>
+<script>
+(function () {
+  var CH = "stat-password";
+  var $ = function (i) { return document.getElementById(i); };
+  var memo = function () { try { return localStorage.getItem(CH) || ""; } catch (e) { return ""; } };
+  var salva = function (v) { try { v ? localStorage.setItem(CH, v) : localStorage.removeItem(CH); } catch (e) {} };
+
+  function mostra(d) {
+    $("tot").textContent = d.totale; $("oggi").textContent = d.oggi;
+    $("sette").textContent = d.sette; $("trenta").textContent = d.trenta;
+    var max = Math.max.apply(null, d.giorni.map(function (x) { return x.n; }).concat([1]));
+    $("rows").innerHTML = d.giorni.map(function (x) {
+      var p = x.g.split("-");
+      return '<div class="row"><span>' + p[2] + "/" + p[1] + '</span><i><u style="width:' + (x.n / max * 100) + '%"></u></i><em>' + x.n + "</em></div>";
+    }).join("");
+    var o = new Date(d.aggiornato);
+    $("agg").textContent = "Aggiornato alle " + o.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+    $("login").classList.add("hide"); $("stat").classList.remove("hide");
+  }
+
+  function carica(pw, manuale) {
+    $("err").textContent = "";
+    return fetch("/api/statistiche", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pw })
+    }).then(function (r) {
+      if (r.status === 401) { salva(""); $("stat").classList.add("hide"); $("login").classList.remove("hide"); $("err").textContent = manuale ? "Password errata." : ""; return; }
+      if (!r.ok) { $("err").textContent = r.status === 503 ? "Password non ancora impostata su Cloudflare." : "Non riesco a leggere i dati. Riprova."; return; }
+      return r.json().then(function (d) { salva(pw); mostra(d); });
+    }).catch(function () { $("err").textContent = "Nessuna connessione."; });
+  }
+
+  $("form").addEventListener("submit", function (e) { e.preventDefault(); carica($("pw").value, true); });
+  $("agg-b").addEventListener("click", function () { carica(memo(), false); });
+  $("azz").addEventListener("click", function () { $("dlg").classList.remove("hide"); });
+  $("chiudi").addEventListener("click", function () { $("dlg").classList.add("hide"); });
+  $("esci").addEventListener("click", function (e) { e.preventDefault(); salva(""); $("stat").classList.add("hide"); $("login").classList.remove("hide"); $("pw").value = ""; });
+  $("cp").addEventListener("click", function () {
+    var t = $("cmd").textContent;
+    function ok() { $("cp").textContent = "Copiato"; setTimeout(function () { $("cp").textContent = "Copia"; }, 1500); }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(ok, function () {}); return; }
+    var r = document.createRange(); r.selectNodeContents($("cmd")); var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    try { document.execCommand("copy"); ok(); } catch (e) {}
+  });
+
+  var m = memo(); if (m) carica(m, false);
+})();
+</script></body></html>
